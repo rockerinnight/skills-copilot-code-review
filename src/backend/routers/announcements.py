@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Query
 
-from ..database import announcements_collection, teachers_collection
+from ..database import announcements_collection, teachers_collection, verify_password
 
 router = APIRouter(
     prefix="/announcements",
@@ -16,13 +16,13 @@ router = APIRouter(
 )
 
 
-def _validate_teacher(teacher_username: Optional[str]) -> Dict[str, Any]:
+def _validate_teacher(teacher_username: Optional[str], teacher_password: Optional[str]) -> Dict[str, Any]:
     """Validate teacher/admin identity for protected routes."""
-    if not teacher_username:
+    if not teacher_username or not teacher_password:
         raise HTTPException(status_code=401, detail="Authentication required for this action")
 
     teacher = teachers_collection.find_one({"_id": teacher_username})
-    if not teacher:
+    if not teacher or not verify_password(teacher.get("password", ""), teacher_password):
         raise HTTPException(status_code=401, detail="Invalid teacher credentials")
 
     return teacher
@@ -74,9 +74,12 @@ def get_active_announcements() -> List[Dict[str, Any]]:
 
 
 @router.get("/all", response_model=List[Dict[str, Any]])
-def get_all_announcements(teacher_username: Optional[str] = Query(None)) -> List[Dict[str, Any]]:
+def get_all_announcements(
+    teacher_username: Optional[str] = Query(None),
+    teacher_password: Optional[str] = Query(None)
+) -> List[Dict[str, Any]]:
     """Get all announcements, including expired ones, for announcement management."""
-    _validate_teacher(teacher_username)
+    _validate_teacher(teacher_username, teacher_password)
 
     announcements = announcements_collection.find({}).sort("created_at", -1)
     return [_serialize_announcement(announcement) for announcement in announcements]
@@ -88,10 +91,11 @@ def create_announcement(
     message: str,
     expiration_date: str,
     start_date: Optional[str] = None,
-    teacher_username: Optional[str] = Query(None)
+    teacher_username: Optional[str] = Query(None),
+    teacher_password: Optional[str] = Query(None)
 ) -> Dict[str, Any]:
     """Create a new announcement."""
-    teacher = _validate_teacher(teacher_username)
+    teacher = _validate_teacher(teacher_username, teacher_password)
 
     message_text = message.strip()
     if not message_text:
@@ -125,10 +129,11 @@ def update_announcement(
     message: str,
     expiration_date: str,
     start_date: Optional[str] = None,
-    teacher_username: Optional[str] = Query(None)
+    teacher_username: Optional[str] = Query(None),
+    teacher_password: Optional[str] = Query(None)
 ) -> Dict[str, Any]:
     """Update an existing announcement."""
-    teacher = _validate_teacher(teacher_username)
+    teacher = _validate_teacher(teacher_username, teacher_password)
 
     message_text = message.strip()
     if not message_text:
@@ -168,10 +173,11 @@ def update_announcement(
 @router.delete("/{announcement_id}", response_model=Dict[str, str])
 def delete_announcement(
     announcement_id: str,
-    teacher_username: Optional[str] = Query(None)
+    teacher_username: Optional[str] = Query(None),
+    teacher_password: Optional[str] = Query(None)
 ) -> Dict[str, str]:
     """Delete an announcement."""
-    _validate_teacher(teacher_username)
+    _validate_teacher(teacher_username, teacher_password)
 
     try:
         object_id = ObjectId(announcement_id)
