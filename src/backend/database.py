@@ -218,6 +218,9 @@ initial_announcements = [
         "message": "Spring activities enrollment closes this Friday at 5:00 PM. Please register students before the deadline.",
         "start_date": None,
         "expiration_date": "2026-12-31",
-        "created_by": "principal"
+        "created_by": "principal",
+        "updated_by": "principal",
+        "created_at": "2026-01-01T08:00:00",
+        "updated_at": "2026-01-01T08:00:00"
     }
 ]
