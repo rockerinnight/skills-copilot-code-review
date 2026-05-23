@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap");
+
 /* Color palette */
 :root {
   /* Primary colors */
@@ -36,11 +38,11 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   line-height: 1.4;
   color: var(--text-primary);
   max-width: 1200px;
@@ -67,10 +69,51 @@ header {
 header h1 {
   margin-bottom: 5px;
   font-size: 1.6rem;
+  font-family: "Sora", "Segoe UI", sans-serif;
 }
 
 header h2 {
   font-size: 1.2rem;
+}
+
+.announcement-strip {
+  margin-bottom: 14px;
+  background: linear-gradient(110deg, #0f4c81, #176f8e 55%, #1f8f7a);
+  color: #ffffff;
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.announcement-card {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid #ffd166;
+  display: grid;
+  gap: 8px;
+}
+
+.announcement-message {
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.announcement-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.78rem;
+  opacity: 0.95;
+}
+
+.announcement-loading,
+.announcement-empty {
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 4px;
 }
 
 main {
@@ -428,6 +471,116 @@ button {
   border: 1px solid var(--border);
 }
 
+.announcements-modal-content {
+  max-width: 700px;
+  width: 95%;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.announcement-form {
+  display: grid;
+  gap: 10px;
+}
+
+.announcement-form textarea,
+.announcement-form input[type="date"] {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 0.9rem;
+}
+
+.announcement-form textarea:focus,
+.announcement-form input[type="date"]:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(83, 75, 174, 0.12);
+  outline: none;
+}
+
+.announcement-date-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.announcement-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.secondary-button {
+  background-color: #eef2ff;
+  color: #243b6b;
+  border: 1px solid #c8d4f6;
+}
+
+.secondary-button:hover {
+  background-color: #dce7ff;
+}
+
+.danger-button {
+  background-color: #b02a37;
+}
+
+.danger-button:hover {
+  background-color: #912330;
+}
+
+.announcements-list-panel {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.announcements-list-panel h4 {
+  margin-bottom: 10px;
+  color: var(--primary);
+}
+
+.announcements-admin-list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.announcement-admin-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  background-color: #fafbfd;
+}
+
+.announcement-admin-content p {
+  margin: 0;
+}
+
+.announcement-admin-dates {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.announcement-admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.announcement-admin-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
 .modal.show .modal-content {
   transform: translateY(0);
 }
@@ -622,6 +775,7 @@ footer {
 #user-status {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 #user-info {
@@ -646,6 +800,17 @@ footer {
   transition: background-color 0.2s;
 }
 
+#manage-announcements-button {
+  background: linear-gradient(135deg, #ffb703, #fb8500);
+  color: #222;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-weight: 700;
+}
+
+#manage-announcements-button:hover {
+  background: linear-gradient(135deg, #ffc935, #ff9d2e);
+}
+
 .icon-button:hover {
   background-color: rgba(255, 255, 255, 0.3);
 }
@@ -665,10 +830,24 @@ footer {
   background-color: rgba(255, 255, 255, 0.3);
 }
 
-.announcement-banner {
-  background-color: #1b5e20;
-  color: white;
-  text-align: center;
-  padding: 15px;
-  font-weight: bold;
+@media (max-width: 767px) {
+  #user-controls {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  #user-status {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .announcement-date-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .announcements-modal-content {
+    width: 96%;
+    padding: 16px;
+  }
 }
