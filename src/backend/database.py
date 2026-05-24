@@ -2,6 +2,8 @@
 MongoDB database configuration and setup for Mergington High School API
 """
 
+from datetime import datetime
+
 from pymongo import MongoClient
 from argon2 import PasswordHasher, exceptions as argon2_exceptions
 
@@ -53,7 +55,18 @@ def init_database():
 
     # Initialize announcements if empty
     if announcements_collection.count_documents({}) == 0:
-        announcements_collection.insert_many(initial_announcements)
+        now = datetime.utcnow().isoformat()
+        seeded_announcements = []
+        for announcement in initial_announcements:
+            seeded_announcements.append({
+                "start_date": None,
+                "created_by": "principal",
+                "updated_by": "principal",
+                "created_at": now,
+                "updated_at": now,
+                **announcement
+            })
+        announcements_collection.insert_many(seeded_announcements)
 
 
 # Initial database if empty
