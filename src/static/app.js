@@ -452,11 +452,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const response = await fetch(
-        `/announcements/all?teacher_username=${encodeURIComponent(
-          currentUser.username
-        )}`
-      );
+      const response = await fetch("/announcements/all", {
+        headers: { "X-Teacher-Username": currentUser.username },
+      });
 
       const data = await response.json();
 
@@ -485,11 +483,10 @@ document.addEventListener("DOMContentLoaded", () => {
       async () => {
         try {
           const response = await fetch(
-            `/announcements/${encodeURIComponent(
-              announcementId
-            )}?teacher_username=${encodeURIComponent(currentUser.username)}`,
+            `/announcements/${encodeURIComponent(announcementId)}`,
             {
               method: "DELETE",
+              headers: { "X-Teacher-Username": currentUser.username },
             }
           );
 
@@ -550,23 +547,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const announcementId = announcementIdInput.value.trim();
-    const payload = new URLSearchParams({
+    const bodyPayload = {
       message: announcementMessageInput.value.trim(),
       expiration_date: announcementExpirationDateInput.value,
       teacher_username: currentUser.username,
-    });
+    };
 
     if (announcementStartDateInput.value) {
-      payload.append("start_date", announcementStartDateInput.value);
+      bodyPayload.start_date = announcementStartDateInput.value;
     }
 
     const endpoint = announcementId
-      ? `/announcements/${encodeURIComponent(announcementId)}?${payload.toString()}`
-      : `/announcements?${payload.toString()}`;
+      ? `/announcements/${encodeURIComponent(announcementId)}`
+      : "/announcements";
     const method = announcementId ? "PUT" : "POST";
 
     try {
-      const response = await fetch(endpoint, { method });
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyPayload),
+      });
       const result = await response.json();
 
       if (!response.ok) {

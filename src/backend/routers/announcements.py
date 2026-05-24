@@ -6,7 +6,8 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException
+from pydantic import BaseModel
 
 from ..database import announcements_collection, teachers_collection
 
@@ -14,6 +15,13 @@ router = APIRouter(
     prefix="/announcements",
     tags=["announcements"]
 )
+
+
+class AnnouncementRequest(BaseModel):
+    message: str
+    expiration_date: str
+    start_date: Optional[str] = None
+    teacher_username: str
 
 
 def _validate_teacher(teacher_username: Optional[str]) -> Dict[str, Any]:
@@ -75,10 +83,10 @@ def get_active_announcements() -> List[Dict[str, Any]]:
 
 @router.get("/all", response_model=List[Dict[str, Any]])
 def get_all_announcements(
-    teacher_username: Optional[str] = Query(None)
+    x_teacher_username: Optional[str] = Header(None)
 ) -> List[Dict[str, Any]]:
     """Get all announcements, including expired ones, for announcement management."""
-    _validate_teacher(teacher_username)
+    _validate_teacher(x_teacher_username)
 
     announcements = announcements_collection.find({}).sort("created_at", -1)
     return [_serialize_announcement(announcement) for announcement in announcements]
@@ -86,21 +94,16 @@ def get_all_announcements(
 
 @router.post("", response_model=Dict[str, Any])
 @router.post("/", response_model=Dict[str, Any])
-def create_announcement(
-    message: str,
-    expiration_date: str,
-    start_date: Optional[str] = None,
-    teacher_username: Optional[str] = Query(None)
-) -> Dict[str, Any]:
+def create_announcement(body: AnnouncementRequest) -> Dict[str, Any]:
     """Create a new announcement."""
-    teacher = _validate_teacher(teacher_username)
+    teacher = _validate_teacher(body.teacher_username)
 
-    message_text = message.strip()
+    message_text = body.message.strip()
     if not message_text:
         raise HTTPException(status_code=400, detail="message is required")
 
-    normalized_start_date = _parse_date(start_date, "start_date")
-    normalized_expiration_date = _parse_date(expiration_date, "expiration_date", required=True)
+    normalized_start_date = _parse_date(body.start_date, "start_date")
+    normalized_expiration_date = _parse_date(body.expiration_date, "expiration_date", required=True)
 
     if normalized_start_date and normalized_start_date > normalized_expiration_date:
         raise HTTPException(status_code=400, detail="start_date cannot be later than expiration_date")
@@ -124,20 +127,17 @@ def create_announcement(
 @router.put("/{announcement_id}", response_model=Dict[str, Any])
 def update_announcement(
     announcement_id: str,
-    message: str,
-    expiration_date: str,
-    start_date: Optional[str] = None,
-    teacher_username: Optional[str] = Query(None)
+    body: AnnouncementRequest
 ) -> Dict[str, Any]:
     """Update an existing announcement."""
-    teacher = _validate_teacher(teacher_username)
+    teacher = _validate_teacher(body.teacher_username)
 
-    message_text = message.strip()
+    message_text = body.message.strip()
     if not message_text:
         raise HTTPException(status_code=400, detail="message is required")
 
-    normalized_start_date = _parse_date(start_date, "start_date")
-    normalized_expiration_date = _parse_date(expiration_date, "expiration_date", required=True)
+    normalized_start_date = _parse_date(body.start_date, "start_date")
+    normalized_expiration_date = _parse_date(body.expiration_date, "expiration_date", required=True)
 
     if normalized_start_date and normalized_start_date > normalized_expiration_date:
         raise HTTPException(status_code=400, detail="start_date cannot be later than expiration_date")
@@ -170,10 +170,10 @@ def update_announcement(
 @router.delete("/{announcement_id}", response_model=Dict[str, str])
 def delete_announcement(
     announcement_id: str,
-    teacher_username: Optional[str] = Query(None)
+    x_teacher_username: Optional[str] = Header(None)
 ) -> Dict[str, str]:
     """Delete an announcement."""
-    _validate_teacher(teacher_username)
+    _validate_teacher(x_teacher_username)
 
     try:
         object_id = ObjectId(announcement_id)
